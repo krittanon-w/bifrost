@@ -85,6 +85,12 @@
       async loadRawData() {
         try {
           this.rawData = await this.$axios.$get('https://gist.githubusercontent.com/krittanon-w/c15fff7058abbe6a56ec5c3616963d31/raw/c089d61f5def2b5bc5327ee38922ee46e70acbc7/biforst')
+          this.rawData = this.rawData
+            .sort((a, b) => (a.name > b.name) ? 1 : -1)
+            .map((_) => {
+              _.addresses = _.addresses.sort((a, b) => (a.tags[0] > b.tags[0]) ? 1 : -1)
+              return _
+            })
           this.tableData = JSON.parse(JSON.stringify(this.rawData))
         }
         catch (error) {
