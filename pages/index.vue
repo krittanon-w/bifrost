@@ -13,9 +13,9 @@
       </a-col>
     </a-row>
     <a-row>
-      <a-col :span="24">
-        <a-table :columns="tableColumns" :dataSource="tableData" :pagination="false" :scroll="true" :hideDefaultSelections="true" :loading="isLoading">
-          <span class="addresses-wrapper" slot="addresses" slot-scope="addresses">
+      <a-col class="table-wrapper" :span="24" style="overflow-y: auto">
+        <a-table :columns="tableColumns" :dataSource="tableData" :pagination="false" :hideDefaultSelections="true" :loading="isLoading" :showHeader="false">
+          <span class="addresses-wrapper  full-height" slot="addresses" slot-scope="addresses">
             <div v-for="address in addresses" :key="address.env" @click="goto(address.link)">
               <a-tag v-for="tag in address.tags" :key="tag" :color="getTagColor(tag)" :checked="false">
                 {{tag}}
@@ -100,7 +100,7 @@
       },
       filterTableData() {
         const checkedList = this.checkedList
-        const searchKeyword = this.searchKeyword
+        const searchKeyword = this.searchKeyword.toLowerCase()
         this.tableData = this.rawData
           .map((_) => {
             return {
@@ -111,7 +111,11 @@
             }
           })
           .filter(_ => _.addresses.length > 0)
-          .filter(_ => _.name.indexOf(searchKeyword) > 0 || _.addresses.some(({link}) => link.indexOf(searchKeyword) > 0) || searchKeyword == "")
+          .filter(_ =>
+            _.name.toLowerCase().indexOf(searchKeyword) >= 0 ||
+            _.addresses.some(({link}) => link.toLowerCase().indexOf(searchKeyword) >= 0) ||
+            searchKeyword == ""
+          )
       },
       onSearchboxChanged() {
         this.filterTableData()
@@ -130,6 +134,9 @@
 </script>
 
 <style>
+  .table-wrapper {
+    height: calc(600px - 46px) !important;
+  }
   .addresses-wrapper > div {
     margin-top: 8px;
     transition: 0.05s;
@@ -147,6 +154,9 @@
     padding: 8px;
     padding-right: 0px;
     transition-duration: 0.1s, 0s;
+  }
+  .ant-table-thead tr {
+    overflow: hidden;
   }
   .ant-table-thead tr th {
     padding: 8px;
@@ -171,5 +181,6 @@
     background-color: #F3F5F6;
     border-bottom: 1px solid #E8E8E8;
     padding: 10px;
+    height: 46px;
   }
 </style>
