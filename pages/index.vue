@@ -141,7 +141,7 @@
 
 <style>
   .table-wrapper {
-    height: calc(600px - 46px) !important;
+    height: calc(600px - 45px) !important;
   }
   .addresses-wrapper > div {
     margin-top: 8px;
@@ -187,6 +187,6 @@
     background-color: #F3F5F6;
     border-bottom: 1px solid #E8E8E8;
     padding: 10px;
-    height: 46px;
+    height: 45px;
   }
 </style>
