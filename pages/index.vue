@@ -1,73 +1,175 @@
 <template>
-  <div class="container">
-    <div>
-      <logo />
-      <h1 class="title">
-        biforst
-      </h1>
-      <h2 class="subtitle">
-        The Bifrost gives you the access to Asgard and the Nine Realms
-      </h2>
-      <div class="links">
-        <a
-          href="https://nuxtjs.org/"
-          target="_blank"
-          class="button--green"
-        >
-          Documentation
-        </a>
-        <a
-          href="https://github.com/nuxt/nuxt.js"
-          target="_blank"
-          class="button--grey"
-        >
-          GitHub
-        </a>
-        <a-button type="primary">Primary</a-button>
-      </div>
-    </div>
+  <div>
+    <a-row>
+      <a-col class="option-panel" :span="24">
+        <a-row>
+          <a-col :span="14">
+            <a-checkbox-group :options="defaultCheckedList" v-model="checkedList" @change="onCheckboxChanged" />
+          </a-col>
+          <a-col :span="10">
+            <a-input-search placeholder="search" style="width: 100%" v-model="searchKeyword" @change="onSearchboxChanged" size="small"/>
+          </a-col>
+        </a-row>
+      </a-col>
+    </a-row>
+    <a-row>
+      <a-col :span="24">
+        <a-table :columns="tableColumns" :dataSource="tableData" :pagination="false" :scroll="true" :hideDefaultSelections="true" :loading="isLoading">
+          <span class="addresses-wrapper" slot="addresses" slot-scope="addresses">
+            <div v-for="address in addresses" :key="address.env" @click="goto(address.link)">
+              <a-tag v-for="tag in address.tags" :key="tag" :color="getTagColor(tag)" :checked="false">
+                {{tag}}
+              </a-tag><span>{{address.link.replace("http://", '').replace("www.", '')}}</span>
+            </div>
+          </span>
+        </a-table>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
+  const tableColumns = [{
+      dataIndex: 'name',
+      title: 'Name',
+      key: 'name',
+      width: "25%"
+    },
+    {
+      dataIndex: 'addresses',
+      title: 'Addresses',
+      key: 'addresses',
+      scopedSlots: {
+        customRender: 'addresses'
+      }
+    }
+  ]
+  const checkedList = ['dev', 'qa', 'prod']
+  const defaultCheckedList = [].concat(checkedList)
 
-export default {
-  components: {
-    Logo
+  export default {
+    data() {
+      return {
+        rawData: [],
+        tableColumns,
+        tableData: [],
+        isLoading: true,
+        checkedList,
+        defaultCheckedList,
+        searchKeyword: ""
+      }
+    },
+    methods: {
+      getTagColor(env) {
+        const colors = [
+          '#1AB399', '#809900', '#E6B3B3', '#6680B3', '#66991A',
+          '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
+          '#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#80B300',
+          '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
+          '#66994D', '#B366CC', '#4D8000', '#B33300', '#CC80CC',
+          '#66664D', '#991AFF', '#E666FF', '#4DB3FF', '#00B3E6',
+          '#E666B3', '#33991A', '#CC9999', '#99E6E6', '#00E680',
+          '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
+          '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
+          '#E64D66', '#4DB380', '#B3B31A', '#FF4D4D', '#6666FF'
+        ]
+        const toHex = (str) => {
+          let result = ''
+          for (let i=0; i<str.length; i++) {
+            result += str.charCodeAt(i) * i
+          }
+          return parseInt(result)
+        }
+        return colors[toHex(env) % colors.length]
+      },
+      async loadRawData() {
+        try {
+          this.rawData = await this.$axios.$get('https://gist.githubusercontent.com/krittanon-w/c15fff7058abbe6a56ec5c3616963d31/raw/c089d61f5def2b5bc5327ee38922ee46e70acbc7/biforst')
+          this.tableData = JSON.parse(JSON.stringify(this.rawData))
+        }
+        catch (error) {
+          this.rawData = []
+          this.tableData = []
+        }
+        finally {
+          this.isLoading = false
+        }
+      },
+      goto(url) {
+        window.open(url)
+      },
+      filterTableData() {
+        const checkedList = this.checkedList
+        const searchKeyword = this.searchKeyword
+        this.tableData = this.rawData
+          .map((_) => {
+            return {
+              name: _.name,
+              addresses: _.addresses.filter((address) => {
+                return address.tags.some(tag => checkedList.some(checked => checked == tag))
+              })
+            }
+          })
+          .filter(_ => _.addresses.length > 0)
+          .filter(_ => _.name.indexOf(searchKeyword) > 0 || _.addresses.some(({link}) => link.indexOf(searchKeyword) > 0) || searchKeyword == "")
+      },
+      onSearchboxChanged() {
+        this.filterTableData()
+      },
+      onCheckboxChanged() {
+        this.filterTableData()
+      },
+    },
+    async mounted() {
+      await this.loadRawData()
+    },
+    computed: {
+
+    }
   }
-}
 </script>
 
 <style>
-.container {
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.title {
-  font-family: 'Quicksand', 'Source Sans Pro', -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  display: block;
-  font-weight: 300;
-  font-size: 100px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.links {
-  padding-top: 15px;
-}
+  .addresses-wrapper > div {
+    margin-top: 8px;
+    transition: 0.05s;
+  }
+  .addresses-wrapper > div:nth-child(1) {
+    margin-top: 0px;
+  }
+  .addresses-wrapper > div:hover {
+    cursor: pointer;
+  }
+  .addresses-wrapper > div:hover > span {
+    color: #23AAF2;
+  }
+  .ant-table-tbody tr td {
+    padding: 8px;
+    padding-right: 0px;
+    transition-duration: 0.1s, 0s;
+  }
+  .ant-table-thead tr th {
+    padding: 8px;
+    text-align: left;
+  }
+  .ant-tag {
+    min-width: 40px;
+    text-align: center;
+    border-radius: 4px;
+  }
+  .ant-tag:hover {
+     cursor: unset ;
+  }
+  a {
+    color: rgba(0, 0, 0, 0.65);
+    transition-duration: 0.1s, 0s;
+  }
+  a:hover {
+    transition-duration: 0.1s, 0s;
+  }
+  .option-panel {
+    background-color: #F3F5F6;
+    border-bottom: 1px solid #E8E8E8;
+    padding: 10px;
+  }
 </style>
