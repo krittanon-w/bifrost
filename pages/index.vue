@@ -23,6 +23,7 @@
         >
           GitHub
         </a>
+        <a-button type="primary">Primary</a-button>
       </div>
     </div>
   </div>

@@ -24,24 +24,27 @@ export default {
   ** Global CSS
   */
   css: [
+    'ant-design-vue/dist/antd.css'
   ],
   /*
   ** Plugins to load before mounting the App
   */
   plugins: [
+    '@/plugins/antd-ui'
   ],
   /*
   ** Nuxt.js dev-modules
   */
   buildModules: [
+    // Doc: https://github.com/nuxt-community/eslint-module
+    '@nuxtjs/eslint-module'
   ],
   /*
   ** Nuxt.js modules
   */
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
-    '@nuxtjs/axios',
-    '@nuxtjs/pwa',
+    '@nuxtjs/axios'
   ],
   /*
   ** Axios module configuration
