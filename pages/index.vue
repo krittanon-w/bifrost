@@ -112,7 +112,10 @@
             return {
               name: _.name,
               addresses: _.addresses.filter((address) => {
-                return address.tags.some(tag => checkedList.some(checked => checked == tag))
+                return address.tags.some(tag =>
+                  checkedList.some(checked => checked == tag) ||
+                  checkedList.length == 3
+                )
               })
             }
           })
@@ -120,7 +123,7 @@
           .filter(_ =>
             _.name.toLowerCase().indexOf(searchKeyword) >= 0 ||
             _.addresses.some(({link}) => link.toLowerCase().indexOf(searchKeyword) >= 0) ||
-            searchKeyword == ""
+            searchKeyword == ''
           )
       },
       onSearchboxChanged() {
