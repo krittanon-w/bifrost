@@ -19,7 +19,7 @@
             <div v-for="address in addresses" :key="address.env" @click="goto(address.link)">
               <a-tag v-for="tag in address.tags" :key="tag" :color="getTagColor(tag)" :checked="false">
                 {{tag}}
-              </a-tag><span>{{address.link.replace("http://", '').replace("www.", '')}}</span>
+              </a-tag><span>{{address.link.replace("http://", '').replace("https://", '').replace("www.", '')}}</span>
             </div>
           </span>
         </a-table>
