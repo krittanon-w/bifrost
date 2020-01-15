@@ -1,0 +1,23 @@
+{
+  "name": "bifrost",
+  "version": "1.0",
+  "description": "The Bifrost gives you the access to Asgard and the Nine Realms",
+  "permissions": [
+    "declarativeContent",
+    "storage",
+    "activeTab",
+    "tabs",
+    "<all_urls>",
+    "*://*/*"
+  ],
+  "browser_action": {
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "manifest_version": 2
+}
