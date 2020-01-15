@@ -159,7 +159,7 @@
 
 <style lang="scss">
   $header-height: 40px;
-  $table-height: calc(100% - $header-height);
+  $table-height: calc(100% - 40px);
 
   .header-wrapper {
     background-color: #F3F5F6;

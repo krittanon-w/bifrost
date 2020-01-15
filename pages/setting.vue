@@ -1,13 +1,15 @@
 <template>
   <div>
-    <a-row class="box">
+    <a-row class="box" :x="computeSources">
       <a-col class="source-wrapper" :span="24">
         <a-row>
           <b>Sources</b>
         </a-row>
         <a-row>
-          <a-input v-for="index in inputSources.length" :key="index" placeholder="..." v-model="sources[index-1]"
-            size="small" />
+          <div v-for="index in sources.length" :key="index">
+            <a-input placeholder="..." v-model="sources[index-1]" size="small" />
+            <a-icon v-if="index != sources.length" type="minus-circle-o" @click="removeSource(index-1)"/>
+          </div>
         </a-row>
         <a-row style="text-align: right;">
           <n-link to="/">
@@ -48,12 +50,12 @@
           })
         }
       },
-    },
-    mounted() {
-      this.getSources()
-    },
-    computed: {
-      inputSources() {
+      removeSource(index) {
+        this.sources[index] = ''
+        this.computeInputList()
+      },
+      computeInputList() {
+        this.sources = this.sources.filter(_ => _.trim() != '')
         if (this.sources.every(_ => _.trim() != '')) {
           this.sources.push('')
         }
@@ -61,6 +63,15 @@
           this.sources.pop()
         }
         return this.sources
+      }
+    },
+    mounted() {
+      this.getSources()
+    },
+    computed: {
+      computeSources() {
+        this.sources
+        this.computeInputList()
       }
     }
   }
@@ -73,6 +84,18 @@
     }
     & .ant-input {
       margin-top: 6px;
+    }
+    .ant-input {
+      width: calc(100% - 20px) !important;
+    }
+    .anticon {
+      margin: 0px !important;
+    }
+    .anticon:hover {
+      color: #23AAF2;
+      cursor: pointer;
+      transition-duration: 0.1s, 0s;
+      margin: 0px !important;
     }
   }
   .menu-wrapper {
