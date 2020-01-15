@@ -83,9 +83,14 @@
     .anticon {
       margin: 0px !important;
       position: absolute;
-      bottom: 5px;
-      right: 5px;
+      bottom: 2px;
+      right: 2px;
       color: #888;
+      background-color: white;
+      padding: 3px;
+      padding-left: 4px;
+      border-radius: 1px;
+      // border-left: 1px solid #EEEEEE;
     }
     .anticon:hover {
       color: #23AAF2;
