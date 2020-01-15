@@ -30,7 +30,7 @@
         </a-table>
       </a-col>
       <div class="menu-wrapper">
-        <a-button type="link" icon="sync" @click="renderTable"></a-button>
+        <a-button type="link" icon="sync" @click="fetchFromServer"></a-button>
         <n-link to="/setting">
           <a-button type="link" icon="setting"></a-button>
         </n-link>
@@ -55,6 +55,18 @@
       }
     }
   ]
+  const colors = [
+    '#1AB399', '#809900', '#E6B3B3', '#6680B3', '#66991A',
+    '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
+    '#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#80B300',
+    '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
+    '#66994D', '#B366CC', '#4D8000', '#B33300', '#CC80CC',
+    '#66664D', '#991AFF', '#E666FF', '#4DB3FF', '#00B3E6',
+    '#E666B3', '#33991A', '#CC9999', '#99E6E6', '#00E680',
+    '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
+    '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
+    '#E64D66', '#4DB380', '#B3B31A', '#FF4D4D', '#6666FF'
+  ]
 
   export default {
     data() {
@@ -64,23 +76,11 @@
         isLoading: true,
         searchWord: '',
         searchTag: 'all',
-        xxxx: 'xxx'
+        tmpData: []
       }
     },
     methods: {
       getTagColor(env) {
-        const colors = [
-          '#1AB399', '#809900', '#E6B3B3', '#6680B3', '#66991A',
-          '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
-          '#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#80B300',
-          '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
-          '#66994D', '#B366CC', '#4D8000', '#B33300', '#CC80CC',
-          '#66664D', '#991AFF', '#E666FF', '#4DB3FF', '#00B3E6',
-          '#E666B3', '#33991A', '#CC9999', '#99E6E6', '#00E680',
-          '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
-          '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
-          '#E64D66', '#4DB380', '#B3B31A', '#FF4D4D', '#6666FF'
-        ]
         const toHex = (str) => {
           let result = ''
           for (let i=0; i<str.length; i++) {
@@ -90,35 +90,31 @@
         }
         return colors[toHex(env) % colors.length]
       },
-      getSources() {
-        return new Promise((resolve, reject) => {
-          resolve(['https://gist.githubusercontent.com/krittanon-w/c15fff7058abbe6a56ec5c3616963d31/raw/c089d61f5def2b5bc5327ee38922ee46e70acbc7/biforst'])
-          if (chrome.storage) {
-            const key = 'sources'
-            chrome.storage.local.get([key], (results) => {
-              return resolve(results[key].filter(_ => _.trim() != '') || [])
-            })
-          }
-        })
-      },
-      async fetchSources() {
+      async fetchFromServer() {
         this.isLoading = true
         try {
-          let data = []
-          const sources = await this.getSources()
-          for (let i=0; i<sources.length; i++) {
-            data = data.concat(await this.$axios.$get(sources[i]))
+          this.tmpData = []
+          const urls = (await this.$getLocalStorage('urls', [])).filter(_ => _ != '')
+          for (let i=0; i<urls.length; i++) {
+            this.tmpData = this.tmpData.concat(await this.$axios.$get(urls[i]))
           }
           this.isLoading = false
-          return data
+          console.log(this.tmpData)
+          await this.$setLocalStorage('tmpData', this.tmpData)
         }
         catch (error) {
-          return []
+          this.tmpData = []
         }
+        await this.renderTable()
+      },
+      async fetchFromCache() {
+        this.isLoading = true
+        this.tmpData = await this.$getLocalStorage('tmpData', [])
+        this.isLoading = false
+        await this.renderTable()
       },
       async renderTable() {
-        this.isLoading = true
-        this.rawData = (await this.fetchSources())
+        this.rawData = this.tmpData
           .sort((a, b) => (a.name > b.name) ? 1 : -1)
           .map((_) => {
             _.addresses = _.addresses.sort((a, b) => (a.tags[0] > b.tags[0]) ? 1 : -1)
@@ -130,7 +126,11 @@
       },
     },
     async mounted() {
-      this.renderTable()
+      await this.fetchFromCache()
+      if (this.tmpData == []) {
+        await this.fetchFromServer()
+      }
+      await this.renderTable()
     },
     computed: {
       tableData() {
@@ -233,5 +233,9 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #555;
+  }
+
+  .ant-table-placeholder {
+    border-bottom: 0px;
   }
 </style>

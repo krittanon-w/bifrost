@@ -1,19 +1,19 @@
 <template>
   <div>
-    <a-row class="box" :x="computeSources">
-      <a-col class="source-wrapper" :span="24">
+    <a-row class="box" :x="computeUrls">
+      <a-col class="url-wrapper" :span="24">
         <a-row>
-          <b>Sources</b>
+          <b>Urls</b>
         </a-row>
         <a-row>
-          <div v-for="index in sources.length" :key="index">
-            <a-input placeholder="..." v-model="sources[index-1]" size="small" />
-            <a-icon v-if="index != sources.length" type="minus-circle-o" @click="removeSource(index-1)"/>
+          <div v-for="index in urls.length" :key="index">
+            <a-input placeholder="..." v-model="urls[index-1]" size="small" />
+            <a-icon v-if="index != urls.length" type="minus-circle-o" @click="removeUrl(index-1)"/>
           </div>
         </a-row>
         <a-row style="text-align: right;">
           <n-link to="/">
-            <a-button id="save" type="link" @click="setSources">save</a-button>
+            <a-button id="save" type="link" @click="setUrls">save</a-button>
           </n-link>
         </a-row>
       </a-col>
@@ -30,47 +30,38 @@
   export default {
     data() {
       return {
-        sources: []
+        urls: []
       }
     },
     methods: {
-      getSources() {
-        if (chrome.storage) {
-          const key = 'sources'
-          chrome.storage.local.get([key], (results) => {
-            console.log('get sources', results[key])
-            this.sources = results[key] || []
-          })
-        }
+      async getUrls() {
+         this.urls = await this.$getLocalStorage('urls', [])
+         this.xxx = await this.$getLocalStorage('urls', [])
       },
-      setSources() {
-        if (chrome.storage) {
-          chrome.storage.local.set({sources: this.sources}, () => {
-            console.log('set sources', this.sources)
-          })
-        }
+      async setUrls() {
+        await this.$setLocalStorage('urls', this.urls.map(_ => _.trim()))
       },
-      removeSource(index) {
-        this.sources[index] = ''
+      removeUrl(index) {
+        this.urls[index] = ''
         this.computeInputList()
       },
       computeInputList() {
-        this.sources = this.sources.filter(_ => _.trim() != '')
-        if (this.sources.every(_ => _.trim() != '')) {
-          this.sources.push('')
+        this.urls = this.urls.filter(_ => _.trim() != '')
+        if (this.urls.every(_ => _.trim() != '')) {
+          this.urls.push('')
         }
-        else if (this.sources.filter(_ => _.trim() == '').length >= 2) {
-          this.sources.pop()
+        else if (this.urls.filter(_ => _.trim() == '').length >= 2) {
+          this.urls.pop()
         }
-        return this.sources
+        return this.urls
       }
     },
     mounted() {
-      this.getSources()
+      this.getUrls()
     },
     computed: {
-      computeSources() {
-        this.sources
+      computeUrls() {
+        this.urls
         this.computeInputList()
       }
     }
@@ -78,7 +69,7 @@
 </script>
 
 <style lang="scss">
-  .source-wrapper {
+  .url-wrapper {
     & {
       padding: 10px;
     }
