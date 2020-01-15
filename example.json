@@ -1,0 +1,52 @@
+[{
+    "name": "GIT/Port",
+    "addresses": [{
+        "tags": [
+          "qa"
+        ],
+        "link": "http://google.com"
+      },
+      {
+        "tags": [
+          "prod",
+          "frontend"
+        ],
+        "link": "http://facebook.com"
+      }
+    ]
+  },
+  {
+    "name": "test",
+    "addresses": [{
+        "tags": [
+          "dev"
+        ],
+        "link": "http://www.google.com"
+      },
+      {
+        "tags": [
+          "qa"
+        ],
+        "link": "http://pantip.com:9000"
+      }
+    ]
+  },
+  {
+    "name": "kapi/Rabbit",
+    "addresses": [{
+      "tags": [
+        "prod"
+      ],
+      "link": "http://www.pantip.com"
+    }]
+  },
+  {
+    "name": "PBB/Gem",
+    "addresses": [{
+      "tags": [
+        "test"
+      ],
+      "link": "http://www.facebook.com"
+    }]
+  }
+]
