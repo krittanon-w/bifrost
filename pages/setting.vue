@@ -6,10 +6,12 @@
           <b>Urls</b>
         </a-row>
         <a-row>
-          <div v-for="index in urls.length" :key="index">
-            <a-input placeholder="..." v-model="urls[index-1]" size="small" />
-            <a-icon v-if="index != urls.length" type="minus-circle-o" @click="removeUrl(index-1)"/>
-          </div>
+          <a-col v-for="index in urls.length" :key="index">
+            <a-row>
+              <a-input placeholder="..." v-model="urls[index-1]" size="small" />
+              <a-icon v-if="index != urls.length" type="minus-circle-o" @click="removeUrl(index-1)"/>
+            </a-row>
+          </a-col>
         </a-row>
         <a-row style="text-align: right;">
           <n-link to="/">
@@ -36,7 +38,6 @@
     methods: {
       async getUrls() {
          this.urls = await this.$getLocalStorage('urls', [])
-         this.xxx = await this.$getLocalStorage('urls', [])
       },
       async setUrls() {
         await this.$setLocalStorage('urls', this.urls.map(_ => _.trim()))
@@ -77,10 +78,14 @@
       margin-top: 6px;
     }
     .ant-input {
-      width: calc(100% - 20px) !important;
+      width: 100% !important;
     }
     .anticon {
       margin: 0px !important;
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      color: #888;
     }
     .anticon:hover {
       color: #23AAF2;

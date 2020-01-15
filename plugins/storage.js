@@ -8,7 +8,7 @@ const getLocalStorage = async (key, defaultValue) => {
       })
     }
     else {
-      resolve(null)
+      resolve(defaultValue)
     }
   })
 }
