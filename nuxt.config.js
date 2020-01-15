@@ -26,6 +26,15 @@ export default {
   css: [
     'ant-design-vue/dist/antd.css'
   ],
+   /*
+  ** Global Style https://github.com/nuxt-community/style-resources-module
+  */
+  styleResources: {
+    sass: [],
+    scss: ['assets/global.sass'],
+    less: [],
+    stylus: []
+  },
   /*
   ** Plugins to load before mounting the App
   */
@@ -44,7 +53,8 @@ export default {
   */
   modules: [
     // Doc: https://axios.nuxtjs.org/usage
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/style-resources'
   ],
   /*
   ** Axios module configuration

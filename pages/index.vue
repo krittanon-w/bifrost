@@ -1,18 +1,23 @@
 <template>
   <div>
-    <a-row>
-      <a-col class="option-panel" :span="24">
+    <a-row class="box">
+      <a-col class="header-wrapper" :span="24">
         <a-row>
-          <a-col :span="14">
-            <a-checkbox-group :options="defaultCheckedList" v-model="checkedList" @change="onCheckboxChanged" />
-          </a-col>
           <a-col :span="10">
-            <a-input-search placeholder="search" style="width: 100%" v-model="searchKeyword" @change="onSearchboxChanged" size="small"/>
+          </a-col>
+          <a-col :span="5" style="padding-right:5px">
+            <a-select showSearch defaultValue="all" v-model="searchTag" size="small"  style="width:100%">
+              <a-select-option value="all">all</a-select-option>
+              <a-select-option value="dev">dev</a-select-option>
+              <a-select-option value="qa">qa</a-select-option>
+              <a-select-option value="prod">prod</a-select-option>
+            </a-select>
+          </a-col>
+          <a-col :span="9">
+            <a-input-search placeholder="search" style="width: 100%" v-model="searchWord" size="small"/>
           </a-col>
         </a-row>
       </a-col>
-    </a-row>
-    <a-row>
       <a-col class="table-wrapper" :span="24" style="overflow-y: auto">
         <a-table :columns="tableColumns" :dataSource="tableData" :pagination="false" :hideDefaultSelections="true" :loading="isLoading" :showHeader="false">
           <span class="addresses-wrapper  full-height" slot="addresses" slot-scope="addresses">
@@ -24,6 +29,12 @@
           </span>
         </a-table>
       </a-col>
+      <div class="menu-wrapper">
+        <a-button type="link" icon="sync" @click="renderTable"></a-button>
+        <n-link to="/setting">
+          <a-button type="link" icon="setting"></a-button>
+        </n-link>
+      </div>
     </a-row>
   </div>
 </template>
@@ -44,19 +55,16 @@
       }
     }
   ]
-  const checkedList = ['dev', 'qa', 'prod']
-  const defaultCheckedList = [].concat(checkedList)
 
   export default {
     data() {
       return {
         rawData: [],
         tableColumns,
-        tableData: [],
         isLoading: true,
-        checkedList,
-        defaultCheckedList,
-        searchKeyword: ""
+        searchWord: '',
+        searchTag: 'all',
+        xxxx: 'xxx'
       }
     },
     methods: {
@@ -82,114 +90,148 @@
         }
         return colors[toHex(env) % colors.length]
       },
-      async loadRawData() {
-        try {
-          this.rawData = await this.$axios.$get('https://gist.githubusercontent.com/krittanon-w/c15fff7058abbe6a56ec5c3616963d31/raw/c089d61f5def2b5bc5327ee38922ee46e70acbc7/biforst')
-          this.rawData = this.rawData
-            .sort((a, b) => (a.name > b.name) ? 1 : -1)
-            .map((_) => {
-              _.addresses = _.addresses.sort((a, b) => (a.tags[0] > b.tags[0]) ? 1 : -1)
-              return _
+      getSources() {
+        return new Promise((resolve, reject) => {
+          resolve(['https://gist.githubusercontent.com/krittanon-w/c15fff7058abbe6a56ec5c3616963d31/raw/c089d61f5def2b5bc5327ee38922ee46e70acbc7/biforst'])
+          if (chrome.storage) {
+            const key = 'sources'
+            chrome.storage.local.get([key], (results) => {
+              return resolve(results[key].filter(_ => _.trim() != '') || [])
             })
-          this.tableData = JSON.parse(JSON.stringify(this.rawData))
+          }
+        })
+      },
+      async fetchSources() {
+        this.isLoading = true
+        try {
+          let data = []
+          const sources = await this.getSources()
+          for (let i=0; i<sources.length; i++) {
+            data = data.concat(await this.$axios.$get(sources[i]))
+          }
+          this.isLoading = false
+          return data
         }
         catch (error) {
-          this.rawData = []
-          this.tableData = []
+          return []
         }
-        finally {
-          this.isLoading = false
-        }
+      },
+      async renderTable() {
+        this.isLoading = true
+        this.rawData = (await this.fetchSources())
+          .sort((a, b) => (a.name > b.name) ? 1 : -1)
+          .map((_) => {
+            _.addresses = _.addresses.sort((a, b) => (a.tags[0] > b.tags[0]) ? 1 : -1)
+            return _
+          })
       },
       goto(url) {
         window.open(url)
       },
-      filterTableData() {
-        const checkedList = this.checkedList
-        const searchKeyword = this.searchKeyword.toLowerCase()
-        this.tableData = this.rawData
-          .map((_) => {
+    },
+    async mounted() {
+      this.renderTable()
+    },
+    computed: {
+      tableData() {
+        const searchTag = this.searchTag
+        const searchWord = this.searchWord.toLowerCase()
+        return this.rawData
+          .map(_ => {
             return {
-              name: _.name,
+              ..._,
               addresses: _.addresses.filter((address) => {
-                return address.tags.some(tag =>
-                  checkedList.some(checked => checked == tag) ||
-                  checkedList.length == 3
-                )
+                return address.tags.some(tag => tag == searchTag || searchTag == 'all')
               })
             }
           })
-          .filter(_ => _.addresses.length > 0)
           .filter(_ =>
-            _.name.toLowerCase().indexOf(searchKeyword) >= 0 ||
-            _.addresses.some(({link}) => link.toLowerCase().indexOf(searchKeyword) >= 0) ||
-            searchKeyword == ''
+            _.name.toLowerCase().indexOf(searchWord) >= 0 ||
+            _.addresses.some(_ => _.link.toLowerCase().indexOf(searchWord) >= 0) ||
+            _.addresses.some(_ => _.tags.join('|').toLowerCase().indexOf(searchWord) >= 0) ||
+            searchWord == ''
           )
+          .filter(_ => _.addresses.length > 0)
       },
-      onSearchboxChanged() {
-        this.filterTableData()
-      },
-      onCheckboxChanged() {
-        this.filterTableData()
-      },
-    },
-    async mounted() {
-      await this.loadRawData()
-    },
-    computed: {
-
     }
   }
 </script>
 
-<style>
+<style lang="scss">
+  $header-height: 40px;
+  $table-height: calc(100% - $header-height);
+
+  .header-wrapper {
+    background-color: #F3F5F6;
+    border-bottom: 1px solid #E8E8E8;
+    padding: 7px 5px 10px 5px;
+    height: $header-height !important;
+  }
+
   .table-wrapper {
-    height: calc(600px - 45px) !important;
+    height: $table-height !important;
   }
-  .addresses-wrapper > div {
-    margin-top: 8px;
-    transition: 0.05s;
+
+  .addresses-wrapper {
+    & > div {
+      margin-top: 5px;
+      transition: 0.05s;
+    }
+    & > div:nth-child(1) {
+      margin-top: 0px;
+    }
+    & > div:hover {
+      cursor: pointer;
+    }
+    & > div:hover > span {
+      color: #23AAF2;
+    }
   }
-  .addresses-wrapper > div:nth-child(1) {
-    margin-top: 0px;
+
+  .ant-table-tbody {
+    & .ant-table-thead tr {
+      overflow: hidden;
+    }
+    & tr td {
+      padding: 5px 0 5px 5px;
+      transition-duration: 0.1s, 0s;
+    }
   }
-  .addresses-wrapper > div:hover {
-    cursor: pointer;
-  }
-  .addresses-wrapper > div:hover > span {
-    color: #23AAF2;
-  }
-  .ant-table-tbody tr td {
-    padding: 8px;
-    padding-right: 0px;
-    transition-duration: 0.1s, 0s;
-  }
-  .ant-table-thead tr {
-    overflow: hidden;
-  }
-  .ant-table-thead tr th {
-    padding: 8px;
-    text-align: left;
-  }
+
   .ant-tag {
     min-width: 40px;
+    margin-right: 5px;
     text-align: center;
     border-radius: 4px;
   }
-  .ant-tag:hover {
-     cursor: unset ;
-  }
+
   a {
     color: rgba(0, 0, 0, 0.65);
     transition-duration: 0.1s, 0s;
   }
-  a:hover {
-    transition-duration: 0.1s, 0s;
+
+  .menu-wrapper {
+    & {
+      position: absolute;
+      bottom: 0px;
+      right: 10px;
+      text-align: right;
+    }
+    & .ant-btn {
+      padding: 0 !important;
+    }
   }
-  .option-panel {
-    background-color: #F3F5F6;
-    border-bottom: 1px solid #E8E8E8;
-    padding: 10px;
-    height: 45px;
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
   }
 </style>
